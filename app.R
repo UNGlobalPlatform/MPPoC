@@ -4,21 +4,22 @@ source("UploadModule.R")
 source("downloadModule.R")
 
 
-ui <- fluidPage(
+ui <- fluidPage(width = 1000,
 
     tags$img(src="ons-logo.png", width=180),
     br(),
   
-    mainPanel(
+    mainPanel(width = 12,
       tabsetPanel(
-        tabPanel("Login", textInput("text", label = h3("Login"), value = "Name..."),textInput("text", label = h3("Pasword"), value = "Enter text...")),
-        tabPanel("AV Check", fileInput("file", label = h3("File to scan"))),
+        tabPanel("Overview", h3("This is a PoC in R for loading data and adding metadata and Material Propretries to it before uploading them to a Secure Data Lake"),img(src='MPPoC-Overview.png', align = "centre", width=800) ),
+        tabPanel("Login", textInput("text", label = h3("Login")),passwordInput("text", label = h3("Pasword"))),
+        tabPanel("AV Check", fileInput("file", label = h3("Upload a file into the DMZ for AV scanning"))),
         tabPanel("Preview Data",    sidebarLayout(
           sidebarPanel(
             uploadModuleInput("datafile"),
             tags$hr(),
-            checkboxInput("row.names", "Append row names"),
-            downloadModuleInput("download")
+            checkboxInput("row.names", "Append row names")
+            # downloadModuleInput("download")
           ),   mainPanel(dataTableOutput("table")))),
         tabPanel("Add Metadata",
                  textInput("text", label = h3("Source")),
@@ -61,13 +62,17 @@ ui <- fluidPage(
                           list("Named"=0,"Closed Group"=4,"Third Parties by type"=8, "Public"=12)),
               div(p(actionLink("showaudience", "", icon=(icon("question-circle", class = NULL, lib = "font-awesome"))),align="right",color="blue"))
               
-            )),
+                ) #tl
+           ),
               mainPanel(
                 plotOutput('radarPlot',height="800px", width="800px")
                 )
               )
-                       
-         )    
+        ),
+
+        tabPanel("Load Library",    
+             downloadModuleInput("download")
+           )
       )
     )
   )
