@@ -6,8 +6,8 @@ uploadModuleInput <- function(id) {
   ns <- NS(id)
   
   tagList(
-    fileInput(ns("file"), "Select an uploaded csv for review and annotation"),
-    checkboxInput(ns("heading"), "Has header row"),
+    fileInput(ns("file"), "Select a file"),
+    checkboxInput(ns("heading"), "Has header row",value = TRUE),
     checkboxInput(ns("strings"), "Coerce strings to factors"),
     textInput(ns("na.string"), "NA symbol", value = "NA")
   )

@@ -4,7 +4,7 @@ downloadModuleInput <- function(id) {
   ns <- NS(id)
   
   tagList(
-    textInput(ns("filename"), "Archive approved data as", value = "secure-data.csv"),
+    textInput(ns("filename"), "Save data as", value = "secure-data.csv"),
     downloadButton(ns("save"), "Save Data")
   )
 }

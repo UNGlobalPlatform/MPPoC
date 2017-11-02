@@ -1,23 +1,24 @@
 library(shiny)
+library(shinyFiles)
 library(fmsb)
 source("UploadModule.R")
 source("downloadModule.R")
 
 
-ui <- fluidPage(width = 1000,
+ui <- fluidPage(width = 720,
 
-    fluidRow(column(3,tags$img(src="ons-logo.png", width=180)),
+    fluidRow(column(3,tags$img(src="ons-logo.png", width=90)),
              column(9, textOutput("liu"),align = "right")
              ),
-    br(),
+#    br(),
   
     mainPanel(width = 12,
       tabsetPanel(
         tabPanel("Overview", 
                  h3("This is a PoC in R for loading data and adding metadata and Material Propretries to it before uploading them to a Secure Data Lake"),
-                 img(src='MPPoC-Overview.png', align = "centre", width=800),
+                 img(src='MPPoC-Overview.png', align = "centre", width=700),
                  br(),
-                 h6("Version 1.4 by Neville de Mendonca & Mark Craddock")
+                 h6("Version 1.5 by Neville de Mendonca & Mark Craddock")
                 ),
         tabPanel("Login", 
                  h3("Please login, to record who added the annotations and authorised the upload"),
@@ -40,11 +41,11 @@ ui <- fluidPage(width = 1000,
                    sidebarLayout(
                    sidebarPanel(
                      tagList(
-                           fileInput("file", label = "select file")
-                      )
+                           uploadModuleInput("AVfile"),
+                           downloadModuleInput("AVfile")
+                     )
                      ),
                     mainPanel( 
-                      # width = 9, align = "centre",
                       img(src='AVscan.jpg', align = "centre", width=400)
                     )
                 )
@@ -54,7 +55,7 @@ ui <- fluidPage(width = 1000,
           sidebarLayout(
             sidebarPanel(
             uploadModuleInput("datafile")
-          ),   mainPanel(dataTableOutput("table")))),
+          ),   mainPanel(verbatimTextOutput("summary"),dataTableOutput("table")))),
         tabPanel("Add Metadata",
                  h3("You may add notes on the data set being uploaded below"),
                  sidebarLayout(
@@ -72,7 +73,7 @@ ui <- fluidPage(width = 1000,
                   )
               )
         ),
-        tabPanel("Material Properties", 
+        tabPanel("Add MP", 
           h3("Assign the Material Properties for this data set"),
           sidebarLayout(
             sidebarPanel(
@@ -80,36 +81,23 @@ ui <- fluidPage(width = 1000,
             tagList(
               selectInput("sensitivity", "Sensitivity:", 
                           list("Open Public"=0,"Commercial"=4,"Private Personal"=8, "Secret"=12)),
-#              div(p(actionLink("showsensitivity", "", icon=(icon("question-circle", class = NULL, lib = "font-awesome"))),align="right",color="blue")),
-              
               selectInput("indentifies", "Identifies:", 
                           list("Non Personal"=0,"Groups"=6,"Individuals"=12)),  
-#              div(p(actionLink("showindentifies", "", icon=(icon("question-circle", class = NULL, lib = "font-awesome"))),align="right",color="red")),
-              
               selectInput("granularity", "Granularity:",
                           list("Population"=0,"Sample"=4,"Record"=8, "Field Variable"=12)),
-#              div(p(actionLink("showgranularity", "", icon=(icon("question-circle", class = NULL, lib = "font-awesome"))),align="right")),
-              
               selectInput("recency", "Recency:",
                           list("Historical"=0,"Periodic"=6,"Real-time"=12)),   
-#              div(p(actionLink("showrecency", "", icon=(icon("question-circle", class = NULL, lib = "font-awesome"))),align="right")),
-              
               selectInput("reliability", "Reliability:",
-                          list("Incomplete"=0,"Patchy"=4,"Substantial"=8, "Complete"=12)),  
-#              div(p(actionLink("showreliability", "", icon=(icon("question-circle", class = NULL, lib = "font-awesome"))),align="right")),
-              
+                          list("Complete"=0,"Substantial"=4,"Patchy"=8, "Incomplete"=12)),  
               selectInput("release", "Release:",
-                          list("Closed"=0,"Restricted"=6,"Open"=12)),                              
-#              div(p(actionLink("showrelease", "", icon=(icon("question-circle", class = NULL, lib = "font-awesome"))),align="right")),
-              
+                          list("Open"=0,"Restricted"=6,"Closed"=12)),                              
               selectInput("audience", "Audience:",
-                          list("Named"=0,"Closed Group"=4,"Third Parties by type"=8, "Public"=12))
-#              div(p(actionLink("showaudience", "", icon=(icon("question-circle", class = NULL, lib = "font-awesome"))),align="right",color="blue"))
-              
+                          list("Public"=0, "Third Parties by type"=4, "Closed Group"=8, "Named"=12))
                 )  
            ),
               mainPanel(
-                plotOutput('radarPlot',height="auto")
+                plotOutput('radarPlot',width = "450px")
+# height="auto")
               )
            )
         ),
@@ -119,7 +107,7 @@ ui <- fluidPage(width = 1000,
                  sidebarLayout(
                    sidebarPanel(
                      tagList(
-                       checkboxInput("row.names", "Append row names"),
+                       checkboxInput("row.names", "Append row names", value=TRUE),
                        downloadModuleInput("download"),
                        hr(),
                        selectInput("odataset", "Save Metadata:",
@@ -143,7 +131,6 @@ ui <- fluidPage(width = 1000,
 
 server <- function(input, output, session) {
   
-
   # record who is logged in and when
   
   output$liu <- renderText({
@@ -151,7 +138,9 @@ server <- function(input, output, session) {
     paste("Logged in as :",isolate(input$loginname), " at ", format(Sys.time(),"%H:%M:%S"), " on ", format(Sys.Date(),"%a %d %b %Y"))
   })
   
-
+  # upload a file for review (from DMZ?)  
+  AVfile <- callModule(uploadModule, "AVfile")
+  
   # upload a file for review (from DMZ?)  
   datafile <- callModule(uploadModule, "datafile")
   
@@ -191,11 +180,16 @@ server <- function(input, output, session) {
       release=as.integer( c(input$release)),
       audience=as.integer( c(input$audience))
     )
-      
+
+    
     # Merges actual data with min/max data for mp plot
     mpdat <- rbind(maxmin,dat)
     
-    radarchart(mpdat, axistype=0, seg=3, plty=1, pfcol=rgb(0.2,0.5,0.5,0.5), vlabels=mpnames,
+    # pfcol=rgb(0.2,0.5,0.5,0.5)
+    colors_border=c( rgb(0.8,0.2,0.5,0.9) , rgb(0.8,0.2,0.5,0.9) , rgb(0.7,0.5,0.1,0.9) )
+    colors_in=c(  rgb(0.7,0.5,0.1,0.4), rgb(0.2,0.5,0.5,0.4), rgb(0.8,0.2,0.5,0.4)  )
+    
+    radarchart(mpdat, axistype=0, seg=3, plty=1, pcol=colors_border, pfcol=colors_in, vlabels=mpnames,
                           title="ONS MPoD Radar v1.4", vlcex=1.4)},
     height = function() {
       session$clientData$output_radarPlot_width
@@ -204,7 +198,6 @@ server <- function(input, output, session) {
 
   callModule(downloadModule, "download", datafile, reactive(input$row.names))
   
-#nt
   # Reactive value for selected dataset ----
   datasetInput <- reactive({
    switch(input$odataset,
@@ -239,64 +232,8 @@ server <- function(input, output, session) {
     },
     content = function(file) {
       write.csv(datasetInput(), file, row.names = TRUE)
-#      write.csv(datasetInput(), col.names=c("name","value"),file, row.names = TRUE)
     }
   )
-  
- 
-
-   
-    # Material Properties info buttons commented out whilst new descriptive text is prepared
-  
-  
-  observeEvent(input$showindentifies, {
-    showModal(modalDialog(
-      title = "Indentifies",
-      "This could be where we will explain in detail what is meant by Indentifies and the catagories of Non-Personal, Groups and Individuals",
-      easyClose = TRUE,
-      footer = NULL
-    ))
-  })
-  observeEvent(input$showgranularity, {
-    showModal(modalDialog(
-      title = "Granularity",
-      "This could be where we will explain in detail what is meant by Granularity and the catagories of Population, Sample, Record and Field Variable",
-      easyClose = TRUE,
-      footer = NULL
-    ))
-  })    
-  observeEvent(input$showrecency, {
-    showModal(modalDialog(
-      title = "Recency",
-      "This could be where we will explain in detail what is meant by Recency and the catagories of Historical, Periodic and Real-time",
-      easyClose = TRUE,
-      footer = NULL
-    ))
-  })    
-  observeEvent(input$showreliability, {
-    showModal(modalDialog(
-      title = "Reliability",
-      "This could be where we will explain in detail what is meant by Reliability and the catagories of Incomplete, Patchy, Substantial and Complete",
-      easyClose = TRUE,
-      footer = NULL
-    ))
-  })    
-  observeEvent(input$showrelease, {
-    showModal(modalDialog(
-      title = "Release",
-      "This could be where we will explain in detail what is meant by Sensitivity and the catagories of Closed, Restricted and Open",
-      easyClose = TRUE,
-      footer = NULL
-    ))
-  })    
-  observeEvent(input$showaudience, {
-    showModal(modalDialog(
-      title = "Audience",
-      "This could be where we will explain in detail what is meant by Audience and the catagories of Closed Group, Third Parties by type and Public",
-      easyClose = TRUE,
-      footer = NULL
-    ))
-  })
 
 }
 
