@@ -15,10 +15,10 @@ ui <- fluidPage(width = 720,
     mainPanel(width = 12,
       tabsetPanel(
         tabPanel("Overview", 
-                 h3("This is a PoC in R for loading data and adding metadata and Material Propretries to it before uploading them to a Secure Data Lake"),
+                 h3("This is a PoC in R for loading data and adding metadata (including the data sensitivity framework scores) to it before uploading them to a Secure Data Lake"),
                  img(src='MPPoC-Overview.png', align = "centre", width=700),
                  br(),
-                 h6("Version 1.5 by Neville de Mendonca & Mark Craddock")
+                 h6("Version 1.6 by Neville de Mendonca & Mark Craddock")
                 ),
         tabPanel("Login", 
                  h3("Please login, to record who added the annotations and authorised the upload"),
@@ -51,7 +51,7 @@ ui <- fluidPage(width = 720,
                 )
        ),
         tabPanel("Preview Data",    
-          h3("Select the data file you are reviewing from the DMZ"),
+          h3("Select a data file to review and annnotate from the DMZ"),
           sidebarLayout(
             sidebarPanel(
             uploadModuleInput("datafile")
@@ -73,8 +73,8 @@ ui <- fluidPage(width = 720,
                   )
               )
         ),
-        tabPanel("Add MP", 
-          h3("Assign the Material Properties for this data set"),
+        tabPanel("Add DSF", 
+          h3("Assign the Data Sensitivity Framework scores for this data set"),
           sidebarLayout(
             sidebarPanel(
             
@@ -103,7 +103,7 @@ ui <- fluidPage(width = 720,
         ),
 
         tabPanel("Ingest Data",    
-                 h3("Upload dataset, metadata and material properties information to Data centre"),
+                 h3("Upload dataset, metadata and data sensitivity information to Data centre"),
                  sidebarLayout(
                    sidebarPanel(
                      tagList(
@@ -190,7 +190,7 @@ server <- function(input, output, session) {
     colors_in=c(  rgb(0.7,0.5,0.1,0.4), rgb(0.2,0.5,0.5,0.4), rgb(0.8,0.2,0.5,0.4)  )
     
     radarchart(mpdat, axistype=0, seg=3, plty=1, pcol=colors_border, pfcol=colors_in, vlabels=mpnames,
-                          title="ONS MPoD Radar v1.4", vlcex=1.4)},
+                          title="ONS DSF Radar v1.5", vlcex=1.4)},
     height = function() {
       session$clientData$output_radarPlot_width
     }
@@ -203,13 +203,13 @@ server <- function(input, output, session) {
    switch(input$odataset,
         "Metadata" =c(
           MD_user=as.character( c(input$loginname)),
-          MP_coded_sensitivity=as.integer( c(input$sensitivity)),
-          MP_coded_indentifies=as.integer( c(input$indentifies)),
-          MP_coded_granularity=as.integer( c(input$granularity)),
-          MP_coded_recency=as.integer( c(input$recency)),
-          MP_coded_reliability=as.integer( c(input$reliability)),
-          MP_coded_release=as.integer( c(input$release)),
-          MP_coded_audience=as.integer( c(input$audience)),
+          DSF_coded_sensitivity=as.integer( c(input$sensitivity)),
+          DSF_coded_indentifies=as.integer( c(input$indentifies)),
+          DSF_coded_granularity=as.integer( c(input$granularity)),
+          DSF_coded_recency=as.integer( c(input$recency)),
+          DSF_coded_reliability=as.integer( c(input$reliability)),
+          DSF_coded_release=as.integer( c(input$release)),
+          DSF_coded_audience=as.integer( c(input$audience)),
           MD_Source=as.character( c(input$MD_Source)),
           MD_Desc=as.character( c(input$MD_Desc)),
           MD_Sender=as.character( c(input$MD_Sender)),
