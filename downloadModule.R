@@ -9,13 +9,10 @@ downloadModuleInput <- function(id) {
   )
 }
 
-downloadModule <- function(input, output, session, data, rnames) {
+downloadModule <- function(input, output, session, data) {
   output$save <- downloadHandler(
     filename = function() input$filename,
     content = function(file) {
-      if (rnames())
-        write.csv(data(), file)
-      else
         write.csv(data(), file, row.names = FALSE)
     }
   )

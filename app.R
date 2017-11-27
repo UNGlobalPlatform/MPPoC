@@ -10,15 +10,14 @@ ui <- fluidPage(width = 720,
     fluidRow(column(3,tags$img(src="ons-logo.png", width=90)),
              column(9, textOutput("liu"),align = "right")
              ),
-#    br(),
-  
+
     mainPanel(width = 12,
       tabsetPanel(
         tabPanel("Overview", 
                  h3("This is a PoC in R for loading data and adding metadata (including the data sensitivity framework scores) to it before uploading them to a Secure Data Lake"),
                  img(src='MPPoC-Overview.png', align = "centre", width=700),
                  br(),
-                 h6("Version 1.6 by Neville de Mendonca & Mark Craddock")
+                 h6("Version 1.8 by Neville de Mendonca & Mark Craddock")
                 ),
         tabPanel("Login", 
                  h3("Please login, to record who added the annotations and authorised the upload"),
@@ -41,7 +40,7 @@ ui <- fluidPage(width = 720,
                    sidebarLayout(
                    sidebarPanel(
                      tagList(
-                           uploadModuleInput("AVfile"),
+                           uploadModuleInput("AVfile"),br(),
                            downloadModuleInput("AVfile")
                      )
                      ),
@@ -96,8 +95,7 @@ ui <- fluidPage(width = 720,
                 )  
            ),
               mainPanel(
-                plotOutput('radarPlot',width = "450px")
-# height="auto")
+                plotOutput('radarPlot',width = "450px")  # height="auto")
               )
            )
         ),
@@ -107,12 +105,11 @@ ui <- fluidPage(width = 720,
                  sidebarLayout(
                    sidebarPanel(
                      tagList(
-                       checkboxInput("row.names", "Append row names", value=TRUE),
                        downloadModuleInput("download"),
                        hr(),
                        selectInput("odataset", "Save Metadata:",
                                    choices = c("Metadata")),
-                       downloadButton("MetaData.csv", "Save Metadata")
+                       downloadButton("downloadData", "Save Metadata")
                        
                     )
                    ),
@@ -140,7 +137,7 @@ server <- function(input, output, session) {
   
   # upload a file for review (from DMZ?)  
   AVfile <- callModule(uploadModule, "AVfile")
-#  callModule(downloadModule, "download", AVfile, TRUE)
+  callModule(downloadModule, "AVfile", AVfile)
   
   # upload a file for review (from DMZ?)  
   datafile <- callModule(uploadModule, "datafile")
@@ -148,8 +145,6 @@ server <- function(input, output, session) {
   output$table <- renderDataTable({
     datafile()
   })
-  
-#  callModule(downloadModule, "download", datafile, reactive(input$row.names))
   
   # Material Properties
   
@@ -199,7 +194,7 @@ server <- function(input, output, session) {
     }
  ) 
 
-  callModule(downloadModule, "download", datafile, reactive(input$row.names))
+  callModule(downloadModule, "download", datafile)
   
   # Reactive value for selected dataset ----
   datasetInput <- reactive({

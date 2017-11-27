@@ -1,15 +1,9 @@
-# Exercise 4
-# 
-# You do not need to do anything with this file
-
 uploadModuleInput <- function(id) {
   ns <- NS(id)
   
   tagList(
     fileInput(ns("file"), "Select a file"),
-    checkboxInput(ns("heading"), "Has header row",value = TRUE),
-    checkboxInput(ns("strings"), "Coerce strings to factors"),
-    textInput(ns("na.string"), "NA symbol", value = "NA")
+    checkboxInput(ns("heading"), "Has header row",value = TRUE)
   )
 }
 
@@ -24,8 +18,6 @@ uploadModule <- function(input, output, session, ...) {
   reactive({
     read.csv(userFile()$datapath,
              header = input$heading,
-             stringsAsFactors = input$strings,
-             na.string = input$na.string,
              ...)
   })
 }
