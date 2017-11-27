@@ -112,7 +112,7 @@ ui <- fluidPage(width = 720,
                        hr(),
                        selectInput("odataset", "Save Metadata:",
                                    choices = c("Metadata")),
-                       downloadButton("downloadData", "Save Metadata")
+                       downloadButton("MetaData.csv", "Save Metadata")
                        
                     )
                    ),
@@ -140,6 +140,7 @@ server <- function(input, output, session) {
   
   # upload a file for review (from DMZ?)  
   AVfile <- callModule(uploadModule, "AVfile")
+#  callModule(downloadModule, "download", AVfile, TRUE)
   
   # upload a file for review (from DMZ?)  
   datafile <- callModule(uploadModule, "datafile")
@@ -147,6 +148,8 @@ server <- function(input, output, session) {
   output$table <- renderDataTable({
     datafile()
   })
+  
+#  callModule(downloadModule, "download", datafile, reactive(input$row.names))
   
   # Material Properties
   
@@ -220,7 +223,7 @@ server <- function(input, output, session) {
      )
   })
   
-  # Table of selected dataset ----
+  # Table of Metadata for the selected dataset ----
   output$otable <- renderTable({
     datasetInput()
   })
